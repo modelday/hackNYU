@@ -1,0 +1,155 @@
+
+        <!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="description" content="Haptic Message is messaging via vibrations for blind and deaf people.">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,shrink-to-fit=no">
+    <title>Haptic Message</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        position: relative;
+      }
+
+      .container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      
+      .buttonBlock {
+        margin: 8px;
+        display: block;
+        height: 50px;
+        width: 100px;
+        border: none;
+        border-radius: 10px;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+      
+       .buttonPlay {
+  border: 0;
+  background: transparent;
+  box-sizing: border-box;
+  width: 0;
+  height: 74px;
+
+  border-color: transparent transparent transparent #2eb147;
+  transition: 100ms all ease;
+  cursor: pointer;
+
+  border-style: solid;
+  border-width: 52px 0 52px 90px;
+
+}
+      
+      #recorder {
+        background: red;
+        width: 100%;
+      	height:0;
+      	padding-bottom: 100%;
+        border-radius: 50%; 
+        
+      }
+      
+      #play {
+              	        margin-left: 25%;
+
+
+      }
+      
+      #copy {
+        background: skyblue;
+      }
+
+      #copy-input {
+        position: absolute;
+        left: -1000px;
+      }
+      
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.5.1/qs.js"></script>
+  </head>
+  <body>
+    <!--[if lte IE 9]>
+      <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
+    <![endif]-->
+
+    <div class="container">
+      <button id="recorder"></button>
+      <button class="buttonPlay" id="play"></button>
+      <button class="buttonBlock" id="copy">COPY</button>
+    </div>
+    <input id="copy-input" type="text">
+    
+    <script>
+      const BREAK_DURATION = 100;
+      const { Qs, performance } = window;
+      let sequence = [];
+      let curTime = 0;
+      const vibrate = (
+        window.navigator.vibrate ||
+        window.navigator.webkitVibrate ||
+        window.navigator.mozVibrate ||
+        window.navigator.msVibrate ||
+        function() {}
+      );
+
+      const playBtn = document.querySelector('#play');
+      const recorderBtn = document.querySelector('#recorder');
+      const copyBtn = document.querySelector('#copy');
+      const input = document.querySelector('input');
+      const hasTouchscreen = 'ontouchstart' in window;
+
+      recorderBtn.addEventListener(hasTouchscreen ? 'touchstart' : 'mousedown', () => {
+        // vibrate 2 indicate to user that recording has begun
+        vibrate(100);
+        curTime = performance.now();
+      });
+
+      recorderBtn.addEventListener(hasTouchscreen ? 'touchend' : 'mouseup', () => {
+        const timeElapsed = Math.round(performance.now() - curTime);
+        sequence = [
+          ...sequence,
+          timeElapsed,
+          BREAK_DURATION,
+        ];
+        curTime = 0;
+        const { origin, pathname } = window.location;
+        const querystring = Qs.stringify({
+          sequence: JSON.stringify(sequence),
+        });
+        input.value = `${origin}${pathname}?${querystring}`;
+      });
+
+      playBtn.addEventListener('click', () => {
+        const receivedSequence = Qs.parse(window.location.search.replace('?', ''))['sequence'];
+        try {
+          vibrate(JSON.parse(receivedSequence));
+        } catch (err) {
+        }
+      });
+
+      copyBtn.addEventListener('click', () => {
+        input.focus();
+        input.select();
+      	document.execCommand('copy');
+      });
+    </script>
+  </body>
+</html>
+
+
+
